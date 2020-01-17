@@ -64,7 +64,6 @@ namespace WorkflowCore.Services
                 {                    
                     workflow.ExecutionPointers.Add(_pointerFactory.BuildNextPointer(def, pointer, outcomeTarget));
                 }
-
                 _eventPublisher.PublishNotification(new StepCompleted()
                 {
                     EventTimeUtc = _datetimeProvider.Now,
