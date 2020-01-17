@@ -1,6 +1,7 @@
 # Loading workflow definitions from JSON or YAML
 
-Simply grab the `DefinitionLoader` from the IoC container and call the `.LoadDefinition` method
+Install the `WorkflowCore.DSL` package from nuget and call `AddWorkflowDSL` on your service collection.
+Then grab the `DefinitionLoader` from the IoC container and call the `.LoadDefinition` method
 
 ```c#
 using WorkflowCore.Interface;
@@ -148,7 +149,7 @@ Steps:
 
 ### WaitFor
 
-The `.WaitFor` can be implemented using 3 inputs as follows
+The `.WaitFor` can be implemented using inputs as follows
 
 | Field                  | Description                 |
 | ---------------------- | --------------------------- |
@@ -182,6 +183,43 @@ Inputs:
   EffectiveDate: DateTime.Now
 
 ```
+
+### Activity
+
+The `.Activity` can be implemented using inputs as follows
+
+| Field                  | Description                 |
+| ---------------------- | --------------------------- |
+| CancelCondition        | Optional expression to specify a cancel condition  |
+| Inputs.ActivityName    | Expression to specify the activity name            |
+| Inputs.Parameters      | Expression to specify the parameters to pass the activity worker                |
+| Inputs.EffectiveDate   | Optional expression to specify the effective date  |
+
+
+```json
+{
+    "Id": "MyActivityStep",
+    "StepType": "WorkflowCore.Primitives.Activity, WorkflowCore",
+    "NextStepId": "...",
+    "CancelCondition": "...",
+    "Inputs": {
+        "ActivityName": "\"my-activity\"",
+        "Parameters": "data.SomeValue"
+    }
+}
+```
+```yaml
+Id: MyActivityStep
+StepType: WorkflowCore.Primitives.Activity, WorkflowCore
+NextStepId: "..."
+CancelCondition: "..."
+Inputs:
+  ActivityName: '"my-activity"'
+  EventKey: '"Key1"'
+  Parameters: data.SomeValue
+
+```
+
 
 ### If
 
@@ -441,4 +479,66 @@ Do:
     NextStepId: do2
   - Id: do2
     StepType: MyApp.DoSomething2, MyApp
+```
+
+### Decision Branches
+
+You can define multiple independent branches within your workflow and select one based on an expression value.
+Hook up your branches via the `SelectNextStep` property, instead of a `NextStepId`.  The expressions will be matched to the step Ids listed in `SelectNextStep`, and the matching next step(s) will be scheduled to execute next.
+
+```json
+{
+  "Id": "DecisionWorkflow",
+  "Version": 1,
+  "DataType": "MyApp.MyData, MyApp",
+  "Steps": [
+    {
+      "Id": "decide",
+      "StepType": "...",
+      "SelectNextStep":
+      {
+        "Branch1": "<<result expression to match for branch 1>>",
+        "Branch2": "<<result expression to match for branch 2>>"
+      }
+    },
+    {
+      "Id": "Branch1",
+      "StepType": "MyApp.PrintMessage, MyApp",
+      "Inputs": 
+	  { 
+		  "Message": "\"Hello from 1\"" 
+	  }
+    },
+    {
+      "Id": "Branch2",
+      "StepType": "MyApp.PrintMessage, MyApp",
+      "Inputs": 
+	  { 
+	    "Message": "\"Hello from 2\"" 
+	  }
+    }
+  ]
+}
+```
+
+```yaml
+Id: DecisionWorkflow
+Version: 1
+DataType: MyApp.MyData, MyApp
+Steps:
+- Id: decide
+  StepType: WorkflowCore.Primitives.Decide, WorkflowCore
+  Inputs:
+    Expression: <<input expression to evaluate>>
+  OutcomeSteps:
+    Branch1: '<<result expression to match for branch 1>>'
+    Branch2: '<<result expression to match for branch 2>>'
+- Id: Branch1
+  StepType: MyApp.PrintMessage, MyApp
+  Inputs:
+    Message: '"Hello from 1"'
+- Id: Branch2
+  StepType: MyApp.PrintMessage, MyApp
+  Inputs:
+    Message: '"Hello from 2"'
 ```

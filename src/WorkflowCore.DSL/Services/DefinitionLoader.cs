@@ -93,7 +93,7 @@ namespace WorkflowCore.Services.DefinitionStorage
 
                 AttachInputs(nextStep, dataType, stepType, targetStep);
                 AttachOutputs(nextStep, dataType, stepType, targetStep);
-
+                
                 if (nextStep.Do != null)
                 {
                     foreach (var branch in nextStep.Do)
@@ -115,8 +115,7 @@ namespace WorkflowCore.Services.DefinitionStorage
                         compensatables.Add(nextStep);
                 }
 
-                if (!string.IsNullOrEmpty(nextStep.NextStepId))
-                    targetStep.Outcomes.Add(new StepOutcome() { ExternalNextStepId = $"{nextStep.NextStepId}" });
+                AttachOutcomes(nextStep, dataType, targetStep);
 
                 result.Add(targetStep);
 
@@ -231,6 +230,25 @@ namespace WorkflowCore.Services.DefinitionStorage
 
                     step.Outputs.Add(new ActionParameter<IStepBody, object>(acn));
                 }
+            }
+        }
+
+        private void AttachOutcomes(StepSourceV1 source, Type dataType, WorkflowStep step)
+        {
+            if (!string.IsNullOrEmpty(source.NextStepId))
+                step.Outcomes.Add(new ValueOutcome() { ExternalNextStepId = $"{source.NextStepId}" });
+
+            var dataParameter = Expression.Parameter(dataType, "data");
+            var outcomeParameter = Expression.Parameter(typeof(object), "outcome");
+
+            foreach (var nextStep in source.SelectNextStep)
+            {                
+                var sourceDelegate = DynamicExpressionParser.ParseLambda(new[] { dataParameter, outcomeParameter }, typeof(object), nextStep.Value).Compile();
+                Expression<Func<object, object, bool>> sourceExpr = (data, outcome) => System.Convert.ToBoolean(sourceDelegate.DynamicInvoke(data, outcome));
+                step.Outcomes.Add(new ExpressionOutcome<object>(sourceExpr)
+                {
+                    ExternalNextStepId = $"{nextStep.Key}"
+                });
             }
         }
 

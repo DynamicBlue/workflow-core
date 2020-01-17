@@ -52,6 +52,7 @@ namespace WorkflowCore.Testing
         protected virtual void ConfigureServices(IServiceCollection services)
         {
             services.AddWorkflow();
+            services.AddWorkflowDSL();
         }
 
         public string StartWorkflow(string json, object data)
@@ -75,7 +76,7 @@ namespace WorkflowCore.Testing
 
         protected IEnumerable<EventSubscription> GetActiveSubscriptons(string eventName, string eventKey)
         {
-            return PersistenceProvider.GetSubcriptions(eventName, eventKey, DateTime.MaxValue).Result;
+            return PersistenceProvider.GetSubscriptions(eventName, eventKey, DateTime.MaxValue).Result;
         }
 
         protected void WaitForEventSubscription(string eventName, string eventKey, TimeSpan timeOut)
