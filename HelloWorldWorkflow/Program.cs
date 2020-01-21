@@ -29,7 +29,7 @@ namespace HelloWorldWorkflow
 
             //setup dependency injection
             IServiceCollection services = IocUnity.GetServices(DateTime.Now.ToString("yyyyMMddHHmm"));
-           // services.AddLogging();
+            services.AddLogging();
             services.AddWorkflow();
             //services.AddWorkflow(x => x.UseMongoDB(@"mongodb://localhost:27017", "workflow"));
             services.AddTransient<GoodbyeWorld>();
