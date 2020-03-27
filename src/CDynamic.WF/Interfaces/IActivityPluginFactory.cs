@@ -8,9 +8,10 @@ namespace CDynamic.WFEngine.Interfaces
     interface IActivityPluginFactory
     {
         ICDActivity GetActivity(string cdActivityId);
-        void Load(string cdActivityPath);
-        IList<ICDActivity> GetActivityList(string cdActivityPath);
-        void Load(IList<ICDActivity> cdActivityList);
+        IList<ICDActivity> GetActivityList(string cdActivityDirPath);
+        void LoadList(string cdActivityDirPath);
+        void LoadList(IList<ICDActivity> cdActivityList);
+        void Load(ICDActivity cdActivityList);
         ICDActivity GetActivityInstance(Type acAtivityType);
     }
 }
